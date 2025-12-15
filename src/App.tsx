@@ -421,6 +421,7 @@ export default function App() {
   const [fireworksActive, setFireworksActive] = useState(false);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [activeFrameId, setActiveFrameId] = useState<string | null>(null);
+  const [isAudioBlocked, setIsAudioBlocked] = useState(false);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -443,9 +444,14 @@ export default function App() {
       return;
     }
     audio.currentTime = 0;
-    void audio.play().catch(() => {
-      // ignore play errors (browser might block)
-    });
+    audio.play()
+      .then(() => {
+        setIsAudioBlocked(false);
+      })
+      .catch(() => {
+        console.log("Audio autoplay blocked");
+        setIsAudioBlocked(true);
+      });
   }, []);
 
   const typingComplete = currentLineIndex >= TYPED_LINES.length;
@@ -550,6 +556,15 @@ export default function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [hasStarted, hasAnimationCompleted, isCandleLit, playBackgroundMusic]);
 
+  useEffect(() => {
+    if (hasStarted) return;
+    const timer = setTimeout(() => {
+      setHasStarted(true);
+      playBackgroundMusic();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [hasStarted, playBackgroundMusic]);
+
   const handleCardToggle = useCallback((id: string) => {
     setActiveCardId((current) => (current === id ? null : id));
     setActiveFrameId(null); // Close active frame if card is opened
@@ -592,6 +607,17 @@ export default function App() {
       </div>
       {hasAnimationCompleted && isCandleLit && (
         <div className="hint-overlay">press space to blow out the candle</div>
+      )}
+      {isAudioBlocked && (
+        <button
+          className="unmute-button"
+          onClick={() => {
+            playBackgroundMusic();
+            setIsAudioBlocked(false);
+          }}
+        >
+          🔇 Sound Off (Click to Play)
+        </button>
       )}
       <Canvas
         gl={{ alpha: true }}
