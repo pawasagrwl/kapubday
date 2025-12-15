@@ -7,7 +7,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 type CakeProps = ThreeElements["group"];
 
 export function Cake({ children, ...groupProps }: CakeProps) {
-  const gltf = useLoader(GLTFLoader, "/cake.glb");
+  const gltf = useLoader(GLTFLoader, import.meta.env.BASE_URL + "cake.glb");
   const cakeScene = useMemo<Group | null>(() => gltf.scene?.clone(true) ?? null, [gltf.scene]);
 
   if (!cakeScene) {

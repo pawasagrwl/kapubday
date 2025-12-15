@@ -83,7 +83,7 @@ const fragmentShader = `
 `;
 
 export function Candle({ children, isLit = true, ...groupProps }: CandleProps) {
-  const gltf = useLoader(GLTFLoader, "/candle.glb");
+  const gltf = useLoader(GLTFLoader, import.meta.env.BASE_URL + "candle.glb");
   const candleScene = useMemo<Group | null>(() => gltf.scene?.clone(true) ?? null, [gltf.scene]);
   const lightRef = useRef<PointLight>(null);
   const flameMeshRef = useRef<Mesh>(null);

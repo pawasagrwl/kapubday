@@ -36,6 +36,8 @@ type AnimatedSceneProps = {
   cards: ReadonlyArray<BirthdayCardConfig>;
   activeCardId: string | null;
   onToggleCard: (id: string) => void;
+  activeFrameId: string | null;
+  onToggleFrame: (id: string) => void;
 };
 
 const CAKE_START_Y = 10;
@@ -77,11 +79,13 @@ const BACKGROUND_FADE_START = Math.max(
 );
 
 const TYPED_LINES = [
-  "> Meri Pyaari Kapu",
+  "> meri pyaari kapu",
   "...",
-  "> today is your birthday",
+  "> today is your 23rd birthday (baar baar din yeh aaye...)",
   "...",
   "> so i made you this computer program",
+  "...",
+  "> it's not much but i hope you like it",
   "...",
   "٩(◕‿◕)۶ ٩(◕‿◕)۶ ٩(◕‿◕)۶"
 ];
@@ -99,10 +103,56 @@ type BirthdayCardConfig = {
 const BIRTHDAY_CARDS: ReadonlyArray<BirthdayCardConfig> = [
   {
     id: "confetti",
-    image: "/card.png",
+    image: import.meta.env.BASE_URL + "card.png",
     position: [1, 0.081, -2],
     rotation: [-Math.PI / 2, 0, Math.PI / 3],
   }
+];
+
+type PictureFrameConfig = {
+  id: string;
+  image: string;
+  mediaType?: "image" | "video"; // Default is image
+  caption?: string;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale?: number;
+};
+
+const PICTURE_FRAMES: ReadonlyArray<PictureFrameConfig> = [
+  {
+    id: "frame1",
+    image: import.meta.env.BASE_URL + "video.mp4",
+    mediaType: "video",
+    caption: "The one where we celebrated Diwali together.",
+    position: [-1.5, 0.735, -2.5],
+    rotation: [0, 4.2, 0],
+    scale: 0.75,
+  },
+  {
+    id: "frame2",
+    image: import.meta.env.BASE_URL + "frame2.jpg",
+    caption: "The one where we confessed our love for each other.",
+    position: [0, 0.735, 3],
+    rotation: [0, 5.6, 0],
+    scale: 0.75,
+  },
+  {
+    id: "frame3",
+    image: import.meta.env.BASE_URL + "frame3.jpg",
+    caption: "The one where we had to depart again.",
+    position: [0, 0.735, -3],
+    rotation: [0, 4.0, 0],
+    scale: 0.75,
+  },
+  {
+    id: "frame4",
+    image: import.meta.env.BASE_URL + "frame4.jpg",
+    caption: "The one where we did our first pooja together.",
+    position: [-1.5, 0.735, 2.5],
+    rotation: [0, 5.4, 0],
+    scale: 0.75,
+  },
 ];
 
 function AnimatedScene({
@@ -114,6 +164,8 @@ function AnimatedScene({
   cards,
   activeCardId,
   onToggleCard,
+  activeFrameId,
+  onToggleFrame,
 }: AnimatedSceneProps) {
   const cakeGroup = useRef<Group>(null);
   const tableGroup = useRef<Group>(null);
@@ -265,30 +317,20 @@ function AnimatedScene({
     <>
       <group ref={tableGroup}>
         <Table />
-        <PictureFrame
-          image="/frame2.jpg"
-          position={[0, 0.735, 3]}
-          rotation={[0, 5.6, 0]}
-          scale={0.75}
-        />
-        <PictureFrame
-          image="/frame3.jpg"
-          position={[0, 0.735, -3]}
-          rotation={[0, 4.0, 0]}
-          scale={0.75}
-        />
-        <PictureFrame
-          image="/frame4.jpg"
-          position={[-1.5, 0.735, 2.5]}
-          rotation={[0, 5.4, 0]}
-          scale={0.75}
-        />
-        <PictureFrame
-          image="/frame1.jpg"
-          position={[-1.5, 0.735, -2.5]}
-          rotation={[0, 4.2, 0]}
-          scale={0.75}
-        />
+        {PICTURE_FRAMES.map((frame) => (
+          <PictureFrame
+            key={frame.id}
+            frameId={frame.id}
+            image={frame.image}
+            mediaType={frame.mediaType}
+            caption={frame.caption}
+            position={frame.position}
+            rotation={frame.rotation}
+            scale={frame.scale}
+            isActive={activeFrameId === frame.id}
+            onToggle={onToggleFrame}
+          />
+        ))}
         {cards.map((card) => (
           <BirthdayCard
             key={card.id}
@@ -378,10 +420,11 @@ export default function App() {
   const [isCandleLit, setIsCandleLit] = useState(true);
   const [fireworksActive, setFireworksActive] = useState(false);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [activeFrameId, setActiveFrameId] = useState<string | null>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/music.mp3");
+    const audio = new Audio(import.meta.env.BASE_URL + "music.mp3");
     audio.loop = true;
     audio.preload = "auto";
     backgroundAudioRef.current = audio;
@@ -509,6 +552,12 @@ export default function App() {
 
   const handleCardToggle = useCallback((id: string) => {
     setActiveCardId((current) => (current === id ? null : id));
+    setActiveFrameId(null); // Close active frame if card is opened
+  }, []);
+
+  const handleFrameToggle = useCallback((id: string) => {
+    setActiveFrameId((current) => (current === id ? null : id));
+    setActiveCardId(null); // Close active card if frame is opened
   }, []);
 
   const isScenePlaying = hasStarted && sceneStarted;
@@ -561,11 +610,13 @@ export default function App() {
             cards={BIRTHDAY_CARDS}
             activeCardId={activeCardId}
             onToggleCard={handleCardToggle}
+            activeFrameId={activeFrameId}
+            onToggleFrame={handleFrameToggle}
           />
           <ambientLight intensity={(1 - environmentProgress) * 0.8} />
           <directionalLight intensity={0.5} position={[2, 10, 0]} color={[1, 0.9, 0.95]} />
           <Environment
-            files={["/shanghai_bund_4k.hdr"]}
+            files={[import.meta.env.BASE_URL + "background.hdr"]}
             backgroundRotation={[0, 3.3, 0]}
             environmentRotation={[0, 3.3, 0]}
             background

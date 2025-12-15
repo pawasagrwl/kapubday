@@ -1,4 +1,4 @@
-import { useCursor, useTexture } from "@react-three/drei";
+import { Html, useCursor, useTexture } from "@react-three/drei";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import {
   useCallback,
@@ -27,7 +27,7 @@ type BirthdayCardProps = {
   children?: ReactNode;
 };
 
-const CARD_SCALE = 0.25;
+const CARD_SCALE = 0.4;
 const CARD_WIDTH = 4 * CARD_SCALE;
 const CARD_HEIGHT = 3 * CARD_SCALE;
 const CAMERA_DISTANCE = 1.2;
@@ -180,6 +180,32 @@ export function BirthdayCard({
             metalness={0}
           />
         </mesh>
+        {isActive && (
+          <Html position={[CARD_WIDTH / 2, CARD_HEIGHT / 2, 0.01]}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle(id);
+              }}
+              style={{
+                background: "red",
+                color: "white",
+                border: "none",
+                borderRadius: "50%",
+                width: "24px",
+                height: "24px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              X
+            </button>
+          </Html>
+        )}
         {children}
       </group>
     </group>
